@@ -34,6 +34,7 @@ classdef Biped < handle
     alphaR = []; % current biped joint configuration (angles) for right foot
     linkLeft = [];
     linkRight = [];
+    stance = ''
   end
   
   %)
@@ -52,6 +53,7 @@ classdef Biped < handle
         %Initialize Biped with 0 angles on all joints
         obj.alphaL = [0 0 0];
         obj.alphaR = [0 0 0];
+        obj.stance = 'TORSO';
     end
     
     % Set geometrical properties of the biped model (eg. link lengths)
@@ -70,6 +72,10 @@ classdef Biped < handle
         %        (ie. joint angles)
         obj.alphaL = a_alpha(1,:);
         obj.alphaR = a_alpha(2,:);
+    end
+    
+    function set_stance(obj, a_stance)
+        obj.stance = a_stance;
     end
         
     % Return SE(2) poses representing left foot frame & right foot frame,
