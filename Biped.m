@@ -152,7 +152,7 @@ classdef Biped < handle
         biped_frames = {};
         switch a_ref_frame
             case 'TORSO'
-                frame1.name = 'g_t_lf'
+                frame1.name = 'g_t_lf';
                 frame1.mat = g_t_lf;
                 frame2.name = 'g_t_rf';
                 frame2.mat = g_t_rf;
@@ -377,7 +377,7 @@ classdef Biped < handle
                 obj.plot_limb(gT_LF, gT_LF.inv() * gT_LFfront);
                 
                 % torso  to right foot
-                gT_P1R = all_frames{1,6}.mat
+                gT_P1R = all_frames{1,6}.mat;
                 gT_P1R.plot('p1R');
                 obj.plot_limb(origin_frame, gT_P1R);
                 % right link 1 to left link 2
@@ -469,6 +469,31 @@ classdef Biped < handle
                 obj.plot_limb(gRF_LF, gRF_LF.inv() * gRF_LFFront);
             otherwise
                 disp('Stance is incorrect');
+        end
+    end
+    
+    
+    function animateTrajectory( obj, a_time, a_joint_traj )
+        % Setup plot
+        figure
+        hold on;
+        curr_angles = [a_joint_traj(1:3,1)'; a_joint_traj(4:6,1)'];
+        obj.set_alpha(curr_angles);
+        obj.plotTF2();
+        currTime = a_time(1, 1);
+        tocTime = 0;
+        for i = 2:length(a_time)
+            tic;
+            curr_angles = [a_joint_traj(1:3,i)'; a_joint_traj(4:6,i)'];
+            obj.set_alpha(curr_angles)
+            hold off;
+            clf;
+            hold on;
+            obj.plotTF2();
+            tocTime = toc;
+            timeDiff = a_time(1, i) - currTime - tocTime;
+            currTime = a_time(1, i);
+            pause(timeDiff);
         end
     end
   end     % methods
