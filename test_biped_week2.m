@@ -2,7 +2,7 @@
 my_biped = Biped();
 
 % Week 2 Biped Script 
-my_link_lens = [2.00, 3.625, 3.625, 0.5, 1.75; 2.25, 3.625, 3.625, 0.5, 1.75];
+my_link_lens = [2.00, 3.625, 3.625, 0.5, 1.75; 2.00, 3.625, 3.625, 0.5, 1.75];
 my_biped.set_geometry( my_link_lens );
 
 

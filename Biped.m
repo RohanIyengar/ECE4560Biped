@@ -35,6 +35,9 @@ classdef Biped < handle
     linkLeft = [];
     linkRight = [];
     stance = ''
+    COM = [];
+    motor_mass = 53.5;
+    num_motor = 6;
   end
   
   %)
@@ -64,6 +67,7 @@ classdef Biped < handle
         %        properties
         obj.linkLeft = a_geom(1,:);
         obj.linkRight = a_geom(2,:);
+        obj.COM = obj.com('TORSO');
     end
     
     % Set joint configuration of the robot
@@ -393,6 +397,8 @@ classdef Biped < handle
                 gT_RFfront = all_frames{1,10}.mat;
                 obj.plot_limb(gT_RF, gT_RF.inv() * gT_RFback);
                 obj.plot_limb(gT_RF, gT_RF.inv() * gT_RFfront);
+                
+                obj.COM = obj.com('TORSO');
             
             case 'LEFT_FOOT'
                 origin_frame.plot('Left Foot')
@@ -431,6 +437,8 @@ classdef Biped < handle
                 obj.plot_limb(gLF_RF, gLF_RF.inv() * gLF_RFBack);
                 obj.plot_limb(gLF_RF, gLF_RF.inv() * gLF_RFFront);
                 
+                obj.COM = obj.com('LEFT_FOOT');
+                
             case 'RIGHT_FOOT'
                 origin_frame.plot('Right Foot')
                 %plot leg lengths
@@ -467,9 +475,14 @@ classdef Biped < handle
                 gRF_LFFront = all_frames{1,10}.mat;
                 obj.plot_limb(gRF_LF, gRF_LF.inv() * gRF_LFBack);
                 obj.plot_limb(gRF_LF, gRF_LF.inv() * gRF_LFFront);
+                
+                obj.COM = obj.com('RIGHT_FOOT');
             otherwise
                 disp('Stance is incorrect');
         end
+        hold on
+        plot(obj.COM(1), obj.COM(2), 'g*');
+        viscircles([obj.COM(1) obj.COM(2)],0.2, 'EdgeColor', 'g')
     end
     
     
@@ -495,6 +508,38 @@ classdef Biped < handle
             currTime = a_time(1, i);
             pause(timeDiff);
         end
+    end
+    
+    %Finds center of mass based on input reference frame
+    %Mass of motors: 53.5g or 54.6g, need to check
+    function [pos_com] = com(obj, a_ref_frame)
+        [~, ~, all_frames] = obj.fwd_kinematics(a_ref_frame);
+        center = [0;0;0];
+        switch a_ref_frame
+            case 'TORSO'
+                center = center + obj.motor_mass .* (all_frames{1}.mat.getM() * [0;0;1]); %p1L
+                center = center + obj.motor_mass .* (all_frames{2}.mat.getM() * [0;0;1]); %p2L
+                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %lf
+                center = center + obj.motor_mass .* (all_frames{6}.mat.getM() * [0;0;1]); %p1R
+                center = center + obj.motor_mass .* (all_frames{7}.mat.getM() * [0;0;1]); %p2R
+                center = center + obj.motor_mass .* (all_frames{8}.mat.getM() * [0;0;1]); %rf
+            case 'LEFT_FOOT'
+                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %p2L
+                center = center + obj.motor_mass .* (all_frames{4}.mat.getM() * [0;0;1]); %p1L
+                center = center + obj.motor_mass .* (all_frames{5}.mat.getM() * [0;0;1]); %lf
+                center = center + obj.motor_mass .* (all_frames{6}.mat.getM() * [0;0;1]); %p1R
+                center = center + obj.motor_mass .* (all_frames{7}.mat.getM() * [0;0;1]); %p2R
+                center = center + obj.motor_mass .* (all_frames{8}.mat.getM() * [0;0;1]); %rf
+            case 'RIGHT_FOOT'
+                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %p2R
+                center = center + obj.motor_mass .* (all_frames{4}.mat.getM() * [0;0;1]); %p1R
+                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %rf
+                center = center + obj.motor_mass .* (all_frames{6}.mat.getM() * [0;0;1]); %p1L
+                center = center + obj.motor_mass .* (all_frames{7}.mat.getM() * [0;0;1]); %p2L
+                center = center + obj.motor_mass .* (all_frames{8}.mat.getM() * [0;0;1]); %lf
+        end
+        center = center ./ (obj.num_motor * obj.motor_mass);
+        pos_com = [center(1); center(2)];
     end
   end     % methods
 end
