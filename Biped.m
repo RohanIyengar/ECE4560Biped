@@ -543,4 +543,3 @@ classdef Biped < handle
     end
   end     % methods
 end
-
