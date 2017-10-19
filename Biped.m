@@ -517,12 +517,12 @@ classdef Biped < handle
         center = [0;0;0];
         switch a_ref_frame
             case 'TORSO'
-                center = center + obj.motor_mass .* (all_frames{1}.mat.getM() * [0;0;1]); %p1L
-                center = center + obj.motor_mass .* (all_frames{2}.mat.getM() * [0;0;1]); %p2L
-                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %lf
-                center = center + obj.motor_mass .* (all_frames{6}.mat.getM() * [0;0;1]); %p1R
-                center = center + obj.motor_mass .* (all_frames{7}.mat.getM() * [0;0;1]); %p2R
-                center = center + obj.motor_mass .* (all_frames{8}.mat.getM() * [0;0;1]); %rf
+                center = center + obj.motor_mass .* (all_frames{1}.mat.getM() * [0;-0.53;1]); %p1L
+                center = center + obj.motor_mass .* (all_frames{2}.mat.getM() * [0;-0.53;1]); %p2L
+                center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0.53;0;1]); %lf
+                center = center + obj.motor_mass .* (all_frames{6}.mat.getM() * [0;-0.53;1]); %p1R
+                center = center + obj.motor_mass .* (all_frames{7}.mat.getM() * [0;-0.53;1]); %p2R
+                center = center + obj.motor_mass .* (all_frames{8}.mat.getM() * [0.53;0;1]); %rf
             case 'LEFT_FOOT'
                 center = center + obj.motor_mass .* (all_frames{3}.mat.getM() * [0;0;1]); %p2L
                 center = center + obj.motor_mass .* (all_frames{4}.mat.getM() * [0;0;1]); %p1L
