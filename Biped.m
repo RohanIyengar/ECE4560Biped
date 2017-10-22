@@ -547,18 +547,37 @@ classdef Biped < handle
     end
     
     function [J] = jacobian( obj, a_alpha, a_ref_frame, a_ee_frame )
-        biped_frames = [];
-        [~,~, biped_frames] = obj.fwd_kinematics(a_ref_frame);
+%         biped_frames = [];
+%         [~,~, biped_frames] = obj.fwd_kinematics(a_ref_frame);
         J = []
         switch a_ref_frame
             case 'TORSO'
-                if (a_ee_frame == 'LEFT_FOOT')
-                    mat1 = rot_mat(a_alpha(2)) * rot_mat(a_alpha(3));
-                    mat2 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(3));
-                    mat3 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(2));
-                    J = [obj.linkLeft(2) + rot_mat(a_alpha(2)) * obj.linkLeft(3), rot_mat(a_alpha(1)) * obj.linkLeft(3), 0;
-                        acos(mat1(1)), acos(mat2(1)), acos(mat3(1))];
+                l1 = 0;
+                l2 = 0;
+                l3 = 0;
+                if (strcmp(a_ee_frame, 'LEFT_FOOT'))
+                    l1 = obj.linkLeft(1);
+                    l2 = obj.linkLeft(2);
+                    l3 = obj.linkLeft(3);
                 end
+                
+                if (strcmp(a_ee_frame, 'RIGHT_FOOT'))
+                    l1 = obj.linkRight(1);
+                    l2 = obj.linkRight(2);
+                    l3 = obj.linkRight(3);
+                end
+                syms t1 t2 t3 x(t1, t2, t3) y(t1, t2, t3) theta(t1, t2, t3)
+                g_torso_LL1(t1, t2, t3) = [cos(t1), -sin(t1), 0; sin(t1), cos(t1), -l1; 0, 0, 1];
+                g_LL1_LL2(t1, t2, t3) = [cos(t2), -sin(t2), 0; sin(t2), cos(t2), -l2; 0, 0, 1];
+                g_LL2_LF(t1, t2, t3) = [cos(t3), -sin(t3), 0; sin(t3), cos(t3), -l3; 0, 0, 1];
+                final_config(t1, t2, t3) = simplify(g_torso_LL1 * g_LL1_LL2 * g_LL2_LF)
+                final_config_sym = final_config(t1, t2, t3);
+                x(t1, t2, t3) = final_config_sym(1, 3);
+                y(t1, t2, t3) = final_config_sym(1, 3);
+                theta(t1, t2, t3) = t1 + t2 + t3;
+                qe = [x; y; theta]
+                J_sym = jacobian(qe,[t1, t2, t3])
+                J = double(J_sym(a_alpha(1), a_alpha(2), a_alpha(3)));
         end
            
     end
