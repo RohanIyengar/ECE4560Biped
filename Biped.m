@@ -552,13 +552,49 @@ classdef Biped < handle
         J = []
         switch a_ref_frame
             case 'TORSO'
-                mat1 = rot_mat(a_alpha(2)) * rot_mat(a_alpha(3));
-                mat2 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(3));
-                mat3 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(2));
-                J = [obj.linkLeft(2) + rot_mat(a_alpha(2)) * obj.linkLeft(3), rot_mat(a_alpha(1)) * obj.linkLeft(3), 0;
-                    acos(mat1(1)), acos(mat2(1)), acos(mat3(1))];
+                if (a_ee_frame == 'LEFT_FOOT')
+                    mat1 = rot_mat(a_alpha(2)) * rot_mat(a_alpha(3));
+                    mat2 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(3));
+                    mat3 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(2));
+                    J = [obj.linkLeft(2) + rot_mat(a_alpha(2)) * obj.linkLeft(3), rot_mat(a_alpha(1)) * obj.linkLeft(3), 0;
+                        acos(mat1(1)), acos(mat2(1)), acos(mat3(1))];
+                end
         end
            
+    end
+    
+    function [traj_alpha] = rr_inv_kin( obj, a_traj_ws, a_time, a_ref_frame, a_ee_frame )
+        [g_t_lf, g_t_rf] = fk_torso_foot(obj);
+        traj_alpha = [];
+        switch a_ref_frame
+            case 'TORSO'
+                if (a_ee_frame == 'LEFT_FOOT')
+                    xi = g_t_lf(1,3);
+                    yi = g_t_lf(2,3);
+                    thetai = acos(g_t_lf(1,1));
+                    t = 0;
+                    alpha1 = obj.alphaL(1);
+                    alpha2 = obj.alphaL(2);
+                    alpha3 = obj.alphaL(3);
+                    a_alpha = [alpha1; alpha2; alpha3];
+                    for i = 1:length(a_time)
+                        dt = a_time(i) - t;
+                        t = a_time(i);
+                        x_dot = a_traj_ws(1,i) - xi;
+                        y_dot = a_traj_ws(2,i) - yi;
+                        theta_dot = a_traj_ws(3,i) - thetai;
+                        xi = a_traj_ws(1,i);
+                        yi = a_traj_ws(2,i);
+                        thetai = a_traj_ws(3,i);
+                        twist = [x_dot; y_dot; theta_dot] ./ dt;
+                        J = jacobian(obj, a_alpha, a_ref_frame, a_ee_frame);
+                        a_dot = pinv(J) * twist;
+                        a_alpha = a_alpha + a_dot .* dt;
+                        traj_alpha = [traj_alpha a_alpha];
+                    end
+                end
+        end
+                    
     end
   end     % methods
 end
