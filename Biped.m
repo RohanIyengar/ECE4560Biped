@@ -541,5 +541,24 @@ classdef Biped < handle
         center = center ./ (obj.num_motor * obj.motor_mass);
         pos_com = [center(1); center(2)];
     end
+    
+    function out = rot_mat(alpha)
+        out = [cos(alpha) -sin(alpha); sin(alpha) cos(alpha)];
+    end
+    
+    function [J] = jacobian( obj, a_alpha, a_ref_frame, a_ee_frame )
+        biped_frames = [];
+        [~,~, biped_frames] = obj.fwd_kinematics(a_ref_frame);
+        J = []
+        switch a_ref_frame
+            case 'TORSO'
+                mat1 = rot_mat(a_alpha(2)) * rot_mat(a_alpha(3));
+                mat2 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(3));
+                mat3 = rot_mat(a_alpha(1)) * rot_mat(a_alpha(2));
+                J = [obj.linkLeft(2) + rot_mat(a_alpha(2)) * obj.linkLeft(3), rot_mat(a_alpha(1)) * obj.linkLeft(3), 0;
+                    acos(mat1(1)), acos(mat2(1)), acos(mat3(1))];
+        end
+           
+    end
   end     % methods
 end
