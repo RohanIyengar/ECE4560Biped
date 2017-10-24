@@ -549,7 +549,7 @@ classdef Biped < handle
     function [J] = jacobian( obj, a_alpha, a_ref_frame, a_ee_frame )
 %         biped_frames = [];
 %         [~,~, biped_frames] = obj.fwd_kinematics(a_ref_frame);
-        J = []
+        J = [];
         switch a_ref_frame
             case 'TORSO'
                 l1 = 0;
@@ -570,13 +570,13 @@ classdef Biped < handle
                 g_torso_LL1(t1, t2, t3) = [cos(t1), -sin(t1), 0; sin(t1), cos(t1), -l1; 0, 0, 1];
                 g_LL1_LL2(t1, t2, t3) = [cos(t2), -sin(t2), 0; sin(t2), cos(t2), -l2; 0, 0, 1];
                 g_LL2_LF(t1, t2, t3) = [cos(t3), -sin(t3), 0; sin(t3), cos(t3), -l3; 0, 0, 1];
-                final_config(t1, t2, t3) = simplify(g_torso_LL1 * g_LL1_LL2 * g_LL2_LF)
+                final_config(t1, t2, t3) = simplify(g_torso_LL1 * g_LL1_LL2 * g_LL2_LF);
                 final_config_sym = final_config(t1, t2, t3);
                 x(t1, t2, t3) = final_config_sym(1, 3);
-                y(t1, t2, t3) = final_config_sym(1, 3);
+                y(t1, t2, t3) = final_config_sym(2, 3);
                 theta(t1, t2, t3) = t1 + t2 + t3;
-                qe = [x; y; theta]
-                J_sym = jacobian(qe,[t1, t2, t3])
+                qe = [x; y; theta];
+                J_sym = jacobian(qe,[t1, t2, t3]);
                 J = double(J_sym(a_alpha(1), a_alpha(2), a_alpha(3)));
         end
            
@@ -584,13 +584,14 @@ classdef Biped < handle
     
     function [traj_alpha] = rr_inv_kin( obj, a_traj_ws, a_time, a_ref_frame, a_ee_frame )
         [g_t_lf, g_t_rf] = fk_torso_foot(obj);
+        lf_mat = g_t_lf.getM();
         traj_alpha = [];
         switch a_ref_frame
             case 'TORSO'
                 if (a_ee_frame == 'LEFT_FOOT')
-                    xi = g_t_lf(1,3);
-                    yi = g_t_lf(2,3);
-                    thetai = acos(g_t_lf(1,1));
+                    xi = lf_mat(1,3);
+                    yi = lf_mat(2,3);
+                    thetai = acos(lf_mat(1,1));
                     t = 0;
                     alpha1 = obj.alphaL(1);
                     alpha2 = obj.alphaL(2);
