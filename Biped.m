@@ -493,7 +493,7 @@ classdef Biped < handle
         curr_angles = [a_joint_traj(1:3,1)'; a_joint_traj(4:6,1)'];
         obj.set_alpha(curr_angles);
         obj.plotTF2();
-        currTime = a_time(1, 1)
+        currTime = a_time(1, 1);
         tocTime = 0;
         for i = 2:length(a_time)
             tic;
@@ -503,7 +503,7 @@ classdef Biped < handle
             clf;
             hold on;
             obj.plotTF2();
-            tocTime = toc
+            tocTime = toc;
             timeDiff = a_time(1, i) - currTime - tocTime;
             currTime = a_time(1, i);
             pause(timeDiff);
