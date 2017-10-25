@@ -29,6 +29,7 @@ traj_alpha = [traj_alpha; zeros(3,length(a_time))];
 
 %rr_inv_kin angles
 figure
+hold on
 subplot(3,1,1)
 plot(a_time, traj_alpha(1,:));
 xlabel('Time (s)');
@@ -41,12 +42,14 @@ subplot(3,1,3)
 plot(a_time, traj_alpha(3,:));
 xlabel('Time (s)');
 ylabel('Alpha ankle');
+hold off
 
 %x-y position over time
 figure
-title('Desired position');
+hold on
 subplot(2,1,1)
 plot(a_time, xvec);
+title('Desired position');
 xlabel('Time (s)');
 ylabel('X position (in)');
 axis([0 5 3 6]);
@@ -55,6 +58,22 @@ plot(a_time, yvec);
 xlabel('Time (s)');
 ylabel('Y position (in)');
 axis([0 5 -6 -3]);
+hold off
+figure
+hold on
+plot(xvec, yvec, 'r')
+title('Desired position (X vs Y Plot)');
+my_biped.set_alpha([traj_alpha(1:3,1)'; traj_alpha(4:6,1)'])
+[g_t_lf1, ~] = my_biped.fk_torso_foot();
+g_t_lf1.plot()
+my_biped.set_alpha([traj_alpha(1:3,10)'; traj_alpha(4:6,10)'])
+[g_t_lf2, ~] = my_biped.fk_torso_foot();
+g_t_lf2.plot()
+my_biped.set_alpha([traj_alpha(1:3,25)'; traj_alpha(4:6,25)'])
+[g_t_lf3, ~] = my_biped.fk_torso_foot();
+g_t_lf3.plot()
+fig = gcf;
+ax = fig.CurrentAxes;
 
 %Accomplished trajectory
 newx = zeros(length(a_time));
@@ -68,9 +87,9 @@ for i = 1:length(a_time);
     newy(i) = m(2,3);
 end
 figure
-title('Accomplished trajectory')
 subplot(2,1,1)
 plot(a_time, newx);
+title('Accomplished trajectory w/ Inverse Kinematics')
 xlabel('Time (s)');
 ylabel('X position (in)');
 axis([0 5 3 6]);
@@ -79,6 +98,33 @@ plot(a_time, newy);
 xlabel('Time (s)');
 ylabel('Y position (in)');
 axis([0 5 -6 -3]);
+figure
+hold on
+plot(newx, newy ,'r');
+title('Accomplished trajectory w/ Inverse Kinematics (X vs Y Plot)')
+my_biped.set_alpha([traj_alpha(1:3,1)'; traj_alpha(4:6,1)'])
+[g_t_lf1, ~] = my_biped.fk_torso_foot();
+g_t_lf1.plot()
+my_biped.set_alpha([traj_alpha(1:3,10)'; traj_alpha(4:6,10)'])
+[g_t_lf2, ~] = my_biped.fk_torso_foot();
+g_t_lf2.plot()
+my_biped.set_alpha([traj_alpha(1:3,25)'; traj_alpha(4:6,25)'])
+[g_t_lf3, ~] = my_biped.fk_torso_foot();
+g_t_lf3.plot()
+axis([ax.XLim ax.YLim]);
+hold off
 
 %Animation
 my_biped.animateTrajectory(a_time, traj_alpha)
+
+%Question 5 Answer:
+% For the fixed right foot frame to left foot, there are now four joint angles to
+% consider from four joints that impact motion. This means the forward kinematics 
+% matrix now depends on four angles. However, the end effector coordinates
+% still have three variables that matter: x, y, and theta_final. This means
+% that the Jacobian matrix will now be a 3x4 matrix as there are four
+% angles to do partial derivatives for. We cannot find the inverse of this
+% non-square matrix to do the resolved rate inverse kinematics. Hence, the
+% pseudo inverse can still be used because the matrix size can still be
+% used to do resolved rate inverse kinematics. In fact, it is the only
+% approach we can do since the non-square matrix is not invertible.
