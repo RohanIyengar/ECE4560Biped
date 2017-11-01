@@ -9,13 +9,13 @@
 clear all;
 global nlp;
 
-addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor');
-addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\src');
-% SNOPTPATH = '../../../../snopt';
-SNOPTPATH = 'C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\snopt';
-addpath([ SNOPTPATH ]);
-addpath([ SNOPTPATH '/matlab/matlab/' ]);
-addpath([ SNOPTPATH '/matlab/mex/' ]);
+% addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor');
+% addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\src');
+% % SNOPTPATH = '../../../../snopt';
+% SNOPTPATH = 'C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\snopt';
+% addpath([ SNOPTPATH ]);
+% addpath([ SNOPTPATH '/matlab/matlab/' ]);
+% addpath([ SNOPTPATH '/matlab/mex/' ]);
 
 % Typesetting for figure text
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
@@ -197,5 +197,5 @@ hold off
 
 %Animation (Need longer time step)
 a_time_anim = a_time(1:2:end);
-traj_alpha_anim = traj_alpha(:,1:2:end);
-my_biped.animateTrajectory(a_time_anim, traj_alpha_anim)
+traj_alpha_anim = traj_alpha(:,2:2:end);
+my_biped.animateTrajectory(a_time_anim, traj_alpha_anim) 
