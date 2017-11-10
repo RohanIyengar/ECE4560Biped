@@ -9,13 +9,13 @@
 clear all;
 global nlp;
 
-addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor');
-addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\src');
+% addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor');
+% addpath('C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\src');
 % SNOPTPATH = '../../../../snopt';
-SNOPTPATH = 'C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\snopt';
-addpath([ SNOPTPATH ]);
-addpath([ SNOPTPATH '/matlab/matlab/' ]);
-addpath([ SNOPTPATH '/matlab/mex/' ]);
+% SNOPTPATH = 'C:\Users\Rohan\Documents\Georgia Tech - Undergrad\The End (Fall 2017)\ECE 4560\Optragen-refactor\snopt';
+% addpath([ SNOPTPATH ]);
+% addpath([ SNOPTPATH '/matlab/matlab/' ]);
+% addpath([ SNOPTPATH '/matlab/mex/' ]);
 
 % Typesetting for figure text
 set(groot, 'defaultAxesTickLabelInterpreter','latex');
@@ -28,13 +28,13 @@ hl = 1.0;
 l_1 = 2.00; l_2 = 3.625; l_3 = 3.625;
 
 % initial/final end-effector poses
-x0 = -4.5; 
+x0 = -4; 
 y0 = 0;
 theta0 = 0;
-xf = 4.5;
+xf = 4;
 yf = 0;
 thetaf = 0;
-com_back = -.5
+com_back = -.5;
 com_front = 1.75;
 com_height_top =  l_1 + l_2 + l_3;
 
@@ -43,17 +43,6 @@ eps = 0.0001;
 
 % Generate symbolic representation of end-effector pose
 syms a1 a2 a3 a4 a5 a6   % a1 = joint 1 angle; a2 = joint 2 angle
-% g0_1 = [ cos(a1) -sin(a1) 0 ; ...
-%          sin(a1) cos(a1)  -l_1 ; ...
-%          0 0 1 ];    % spatial frame to 1st link frame (co-located with first joint)
-% g1_2 = [ cos(a2) -sin(a2) 0 ; ...
-%          sin(a2) cos(a2)  -l_2 ; ...
-%          0 0 1 ];    % 1st link frame to 2nd link frame (co-located with second joint)
-% g2_3 = [ cos(a3) -sin(a3) 0 ; ...
-%          sin(a3) cos(a3) -l_3 ; ...
-%          0 0 1 ];    % 2nd link frame to end frame at end of 2nd link (ie. end-effector)
-% g_ee = g0_1*g1_2*g2_3;      % spatial frame to end-effector frame
-% g_ee_x_str = char(vpa(g_ee(1, 3), 9));      % end-effector x- spatial position
 g_ee = [  cos(a1 + a2 + a3 - a4 - a5 - a6), sin(a1 + a2 + a3 - a4 - a5 - a6), (29*sin(a2 + a3))/8 - (29*sin(a1 + a2 + a3 - a4 - a5))/8 - (29*sin(a1 + a2 + a3 - a4))/8 + (29*sin(a3))/8; ...
     -sin(a1 + a2 + a3 - a4 - a5 - a6), cos(a1 + a2 + a3 - a4 - a5 - a6), (29*cos(a2 + a3))/8 - (29*cos(a1 + a2 + a3 - a4 - a5))/8 - (29*cos(a1 + a2 + a3 - a4))/8 + (29*cos(a3))/8; ...
                                  0,                                0,                                                                                                         1];
@@ -61,6 +50,20 @@ pos_com_x = (53*cos(a1 + a2 + a3 - a4 - a5 - a6))/600 - (277*sin(a1 + a2 + a3 - 
 pos_com_y = (1173*cos(a2 + a3))/400 - (277*cos(a1 + a2 + a3 - a4 - a5))/400 - (53*sin(a1 + a2 + a3 - a4 - a5 - a6))/600 - (389*cos(a1 + a2 + a3 - a4))/300 + (1061*cos(a3))/300 + (42809^(1/2)*cos(a1 + a2 + a3 + atan(53/200)))/600;
 g_ee_x_str = char(vpa(g_ee(1, 3), 9));      % end-effector x- spatial position
 g_ee_y_str = char(vpa(g_ee(2, 3), 9));      % end-effector y- spatial position
+
+%All joints
+g_lf_p2L = [cos(a3)/(cos(a3)^2 + sin(a3)^2), sin(a3)/(cos(a3)^2 + sin(a3)^2), (29*sin(a3))/(8*(cos(a3)^2 + sin(a3)^2));
+    -sin(a3)/(cos(a3)^2 + sin(a3)^2), cos(a3)/(cos(a3)^2 + sin(a3)^2), (29*cos(a3))/(8*(cos(a3)^2 + sin(a3)^2));
+     0,                               0,                                        1];
+g_lf_p2L_x_str = char(vpa(g_lf_p2L(1,3), 9));
+g_lf_p2L_y_str = char(vpa(g_lf_p2L(2,3), 9));
+
+g_lf_p2R = [  cos(a1 + a2 + a3 - a4 - a5), sin(a1 + a2 + a3 - a4 - a5), (29*sin(a2 + a3))/8 - (29*sin(a1 + a2 + a3 - a4))/8 + (29*sin(a3))/8;
+    -sin(a1 + a2 + a3 - a4 - a5), cos(a1 + a2 + a3 - a4 - a5), (29*cos(a2 + a3))/8 - (29*cos(a1 + a2 + a3 - a4))/8 + (29*cos(a3))/8;
+    0,                           0,                                                                    1];
+g_lf_p2R_x_str = char(vpa(g_lf_p2R(1,3), 9));
+g_lf_p2R_y_str = char(vpa(g_lf_p2R(2,3), 9));
+
 pos_com_x_str = char(pos_com_x);
 pos_com_y_str = char(pos_com_y);
 g_ee_theta_str = char(a1 + a2 + a3 + a4 + a5 + a6);
@@ -103,25 +106,26 @@ Constr = constraint(x0,g_ee_x_str,x0,'initial', xVars) + ... % x(0)
     constraint(yf,g_ee_y_str,yf,'final', xVars) + ...
     constraint(thetaf,g_ee_theta_str,thetaf,'final', xVars) + ... 
     constraint(x0-.5,g_ee_x_str,xf+.5,'trajectory', xVars) + ... % Try to make sure right leg doesn't go too wild, x and y constaints
-    constraint(y0,g_ee_y_str,15,'trajectory', xVars) + ... % don't want right leg  to go into the ground
-    constraint(-pi/2,g_ee_a1_str,(3*pi)/4,'trajectory',xVars) + ... %Hip angle constraints -- These are arbitrary -- no real reason
+    constraint(y0,g_ee_y_str,6,'trajectory', xVars) + ... % don't want right leg  to go into the ground
+    constraint(-pi/3,g_ee_a1_str,(3*pi)/4,'trajectory',xVars) + ... %Hip angle constraints -- These are arbitrary -- no real reason
     constraint(-pi,g_ee_a4_str, pi/2,'trajectory',xVars) + ...
-    constraint(-3*pi/4,g_ee_a2_str,0,'trajectory',xVars) + ... %Left knee cannot bend outward (ie. unnatural angle)
+    constraint(-pi/2,g_ee_a2_str,0,'trajectory',xVars) + ... %Left knee cannot bend outward (ie. unnatural angle)
     constraint(-3*pi/4,g_ee_a5_str,0,'trajectory',xVars) + ... %Right knee cannot bend inward (ie. unnatural angle)
-    constraint(0,g_ee_a3_str,pi,'trajectory',xVars) + ... % Foot angle constraints -- these are arbitrary as well
-    constraint(0,g_ee_a6_str,pi,'trajectory',xVars) + ...
-    constraint(0,g_torso_left_leg_str,0,'initial',xVars) + ... %Torso to Left leg needs to start at 0 angle
-    constraint(0,g_torso_left_leg_str,0,'final',xVars) + ... %Torso to Left leg needs to end at 0 angle
-    constraint(0,g_torso_left_leg_str,0,'trajectory',xVars) + ... %Left leg needs to remain at 0 angle (on ground)
+    constraint(0,g_ee_a3_str,pi/4,'trajectory',xVars) + ... % Foot angle constraints -- these are arbitrary as well
+    constraint(0,g_ee_a6_str,pi/4,'trajectory',xVars) + ...
     constraint(0,g_torso_right_leg_str,0,'initial',xVars) + ... %Torso to Right leg needs to start at 0 angle
     constraint(0,g_torso_right_leg_str,0,'final',xVars) + ... ; %Torso to Right leg needs to end at 0 angle
     constraint(com_back,pos_com_x_str,com_front,'trajectory',xVars) + ... % COM x constraint
-    constraint(0,pos_com_y_str,com_height_top,'trajectory',xVars); % COM y constraint
+    constraint(0,pos_com_y_str,com_height_top,'trajectory',xVars) + ... % COM y constraint
+    constraint(x0-1,g_lf_p2L_x_str,xf+2,'trajectory', xVars) + ... % Left knee x constraint
+    constraint(y0,g_lf_p2L_y_str,8,'trajectory', xVars) + ... % Left knee y constraint
+    constraint(x0-1,g_lf_p2R_x_str,xf+2,'trajectory', xVars) + ... % Right knee x constraint
+    constraint(y0,g_lf_p2R_y_str,8,'trajectory', xVars); % Right knee y constraint
 
 
 % Define Cost Function
 % ====================
-Cost = cost('a1d^2+a2d^2+a4d^2+a5d^2','trajectory'); % Minimise energy
+Cost = cost('a1d^2+a1d+a2d^2+a4d^2+a4d+a5d^2','trajectory'); % Minimise energy
 
 % Collocation Points, using Gaussian Quadrature formula
 % =====================================================
@@ -156,13 +160,13 @@ snset('Minimize');
 xlow = -Inf*ones(nlp.nIC,1);
 xupp = Inf*ones(nlp.nIC,1);
 
-Time = linspace(0,5,50);
-a1_val = linspace(-pi,pi,50);
-a2_val = linspace(-pi,pi,50);
-a3_val = linspace(-pi,pi,50);
-a4_val = linspace(-pi,pi,50);
-a5_val = linspace(-pi,pi,50);
-a6_val = linspace(-pi,pi,50);
+Time = linspace(0,5,40);
+a1_val = linspace(-pi,pi,40);
+a2_val = linspace(-pi,pi,40);
+a3_val = linspace(-pi,pi,40);
+a4_val = linspace(-pi,pi,40);
+a5_val = linspace(-pi,pi,40);
+a6_val = linspace(-pi,pi,40);
 a1_sp = createGuess(a1,Time,a1_val);
 a2_sp = createGuess(a2,Time,a2_val);
 a3_sp = createGuess(a3,Time,a3_val);
@@ -188,7 +192,7 @@ a4SP = sp{4};
 a5SP = sp{5};
 a6SP = sp{6};
 
-refinedTimeGrid = linspace(min(HL),max(HL),50);
+refinedTimeGrid = linspace(min(HL),max(HL),40);
 
 A1 = fnval(a1SP,refinedTimeGrid);
 A1d = fnval(fnder(a1SP),refinedTimeGrid);
@@ -209,14 +213,14 @@ A6 = fnval(a6SP,refinedTimeGrid);
 A6d = fnval(fnder(a6SP),refinedTimeGrid);
 
 % Planar 2-R Arm joint trajectory
-figure(1);
-plot3(A1,A2,A3,'b');
-xlabel('Joint 1 (rad)'); ylabel('Joint 2 (rad)'); zlabel('Joint 3 (rad)');
-title('Joint Trajectory');
-figure(2);
-plot3(A4,A5,A6,'b');
-xlabel('Joint 4 (rad)'); ylabel('Joint 5 (rad)'); zlabel('Joint 6 (rad)');
-title('Joint Trajectory');
+% figure(1);
+% plot3(A1,A2,A3,'b');
+% xlabel('Joint 1 (rad)'); ylabel('Joint 2 (rad)'); zlabel('Joint 3 (rad)');
+% title('Joint Trajectory');
+% figure(2);
+% plot3(A4,A5,A6,'b');
+% xlabel('Joint 4 (rad)'); ylabel('Joint 5 (rad)'); zlabel('Joint 6 (rad)');
+% title('Joint Trajectory');
 
 a_time = Time;
 traj_alpha = [A1; A2; A3; A4; A5; A6];
@@ -235,7 +239,7 @@ a_alpha = [0 0 0; 0 0 0];
 my_biped.set_alpha(a_alpha);
 my_biped.set_stance('LEFT_FOOT')
 
-%Angle plots
+% Angle plots
 figure(3)
 hold on
 subplot(3,1,1)
@@ -273,4 +277,6 @@ hold off
 %Animation (Need longer time step)
 a_time_anim = a_time(1:2:end);
 traj_alpha_anim = traj_alpha(:,2:2:end);
+% a_time_anim = a_time(1);
+% traj_alpha_anim = traj_alpha(:,1);
 my_biped.animateTrajectory(a_time_anim, traj_alpha_anim) 
