@@ -488,8 +488,8 @@ classdef Biped < handle
     
     function animateTrajectory( obj, a_time, a_joint_traj )
         % Setup plot
-        figure
-        hold on;
+        %figure
+        %hold on;
         curr_angles = [a_joint_traj(1:3,1)'; a_joint_traj(4:6,1)'];
         obj.set_alpha(curr_angles);
         obj.plotTF2();
