@@ -28,7 +28,7 @@ classdef Biped < handle
   
   
   properties
-    gRO = [];       % robot spatial pose
+    gRO = SE2();       % robot spatial pose
     torsoSE2 = SE2();
     alphaL = []; % current biped joint configuration (angles) for left foot
     alphaR = []; % current biped joint configuration (angles) for right foot
@@ -52,7 +52,7 @@ classdef Biped < handle
         % TO DO: Assign default values for any class properties that do
         %        not otherwise have associated 'setter' class methods
         obj.torsoSE2 = SE2([0, 0], 0);
-        obj.gRO = obj.torsoSE2.getM();
+        obj.gRO = SE2([0, 0], 0);
         %Initialize Biped with 0 angles on all joints
         obj.alphaL = [0 0 0];
         obj.alphaR = [0 0 0];
@@ -80,6 +80,16 @@ classdef Biped < handle
     
     function set_stance(obj, a_stance)
         obj.stance = a_stance;
+    end
+    
+    function set_gRO(obj, trans)
+        resultMat = trans * obj.gRO;
+        transNow = resultMat.getTranslation();
+        obj.gRO = SE2([transNow(1) + .0001, 0], resultMat.getTheta());
+    end
+    
+    function out = get_gRO(obj)
+        out = obj.gRO;
     end
         
     % Return SE(2) poses representing left foot frame & right foot frame,
@@ -358,43 +368,43 @@ classdef Biped < handle
     function plotTF2( obj )
         stance_now = obj.stance;
         [~, ~, all_frames] = obj.fwd_kinematics(stance_now);
-        origin_frame = SE2([0, 0], 0);
+        origin_frame = obj.gRO;
         switch stance_now
             case 'TORSO'
                 % torso to right foot
                 origin_frame.plot('torso');
-                gT_P1L = all_frames{1,1}.mat;
+                gT_P1L = origin_frame * all_frames{1,1}.mat;
                 gT_P1L.plot('p1L');
-                obj.plot_limb(origin_frame, gT_P1L);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gT_P1L);
                 % left link 1 to left link 2
-                gT_P2L = all_frames{1,2}.mat;
+                gT_P2L = origin_frame * all_frames{1,2}.mat;
                 gT_P2L.plot('p2L');
                 obj.plot_limb(gT_P1L, (gT_P1L.inv() * gT_P2L));
                 % left link 2 to left foot
-                gT_LF = all_frames{1,3}.mat;
+                gT_LF = origin_frame * all_frames{1,3}.mat;
                 gT_LF.plot('tLF')
                 obj.plot_limb(gT_P2L, (gT_P2L.inv() * gT_LF));
                 % left foot to each foot 
-                gT_LFback = all_frames{1,4}.mat;
-                gT_LFfront = all_frames{1,5}.mat;
+                gT_LFback = origin_frame * all_frames{1,4}.mat;
+                gT_LFfront = origin_frame * all_frames{1,5}.mat;
                 obj.plot_limb(gT_LF, gT_LF.inv() * gT_LFback);
                 obj.plot_limb(gT_LF, gT_LF.inv() * gT_LFfront);
                 
                 % torso  to right foot
-                gT_P1R = all_frames{1,6}.mat;
+                gT_P1R = origin_frame * all_frames{1,6}.mat;
                 gT_P1R.plot('p1R');
-                obj.plot_limb(origin_frame, gT_P1R);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gT_P1R);
                 % right link 1 to left link 2
-                gT_P2R = all_frames{1,7}.mat;
+                gT_P2R = origin_frame * all_frames{1,7}.mat;
                 gT_P2R.plot('p2R');
                 obj.plot_limb(gT_P1R, (gT_P1R.inv() * gT_P2R));
                 % right link 2 to left foot
-                gT_RF = all_frames{1,8}.mat;
+                gT_RF = origin_frame * all_frames{1,8}.mat;
                 gT_RF.plot('tRF')
                 obj.plot_limb(gT_P2R, (gT_P2R.inv() * gT_RF));
                 % right foot to each foot 
-                gT_RFback = all_frames{1,9}.mat;
-                gT_RFfront = all_frames{1,10}.mat;
+                gT_RFback = origin_frame * all_frames{1,9}.mat;
+                gT_RFfront = origin_frame * all_frames{1,10}.mat;
                 obj.plot_limb(gT_RF, gT_RF.inv() * gT_RFback);
                 obj.plot_limb(gT_RF, gT_RF.inv() * gT_RFfront);
                 
@@ -403,37 +413,37 @@ classdef Biped < handle
             case 'LEFT_FOOT'
                 origin_frame.plot('Left Foot')
                 %plot leg lengths
-                gRF_LFBack = all_frames{1,1}.mat;
-                gLF_LFFront = all_frames{1,2}.mat;
-                obj.plot_limb(origin_frame, gRF_LFBack);
-                obj.plot_limb(origin_frame, gLF_LFFront);
+                gRF_LFBack = origin_frame * all_frames{1,1}.mat;
+                gLF_LFFront = origin_frame * all_frames{1,2}.mat;
+                obj.plot_limb(origin_frame, origin_frame.inv() * gRF_LFBack);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gLF_LFFront);
                 % left foot to second left link
-                gLF_P2L = all_frames{1,3}.mat;
+                gLF_P2L = origin_frame * all_frames{1,3}.mat;
                 gLF_P2L.plot('LF-P2L')
-                obj.plot_limb(origin_frame, gLF_P2L);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gLF_P2L);
                 % second left link to first left link
-                gLF_P1L = all_frames{1,4}.mat;
+                gLF_P1L = origin_frame * all_frames{1,4}.mat;
                 gLF_P1L.plot('LF-P1L')
                 obj.plot_limb(gLF_P2L, gLF_P2L.inv() * gLF_P1L);
                 % first left link to torso
-                gLF_T = all_frames{1,5}.mat;
+                gLF_T = origin_frame * all_frames{1,5}.mat;
                 gLF_T.plot('LF-T')
                 obj.plot_limb(gLF_P1L, gLF_P1L.inv() * gLF_T);
                 % torso to firsr right link
-                gLF_P1R = all_frames{1,6}.mat;
+                gLF_P1R = origin_frame * all_frames{1,6}.mat;
                 gLF_P1R.plot('LF-P1R')
                 obj.plot_limb(gLF_T, gLF_T.inv() * gLF_P1R);
                 % first right link to second right link
-                gLF_P2R = all_frames{1,7}.mat;
+                gLF_P2R = origin_frame * all_frames{1,7}.mat;
                 gLF_P2R.plot('LF-P2R')
                 obj.plot_limb(gLF_P1R, gLF_P1R.inv() * gLF_P2R);
                 % second right link to right foot
-                gLF_RF = all_frames{1,8}.mat;
+                gLF_RF = origin_frame * all_frames{1,8}.mat;
                 gLF_RF.plot('LF-RF')
                 obj.plot_limb(gLF_P2R, gLF_P2R.inv() * gLF_RF);
                 % right foot to leg lengths
-                gLF_RFBack = all_frames{1,9}.mat;
-                gLF_RFFront = all_frames{1,10}.mat;
+                gLF_RFBack = origin_frame * all_frames{1,9}.mat;
+                gLF_RFFront = origin_frame * all_frames{1,10}.mat;
                 obj.plot_limb(gLF_RF, gLF_RF.inv() * gLF_RFBack);
                 obj.plot_limb(gLF_RF, gLF_RF.inv() * gLF_RFFront);
                 
@@ -442,37 +452,37 @@ classdef Biped < handle
             case 'RIGHT_FOOT'
                 origin_frame.plot('Right Foot')
                 %plot leg lengths
-                gRF_RFBack = all_frames{1,1}.mat;
-                gRF_RFFront = all_frames{1,2}.mat;
-                obj.plot_limb(origin_frame, gRF_RFBack);
-                obj.plot_limb(origin_frame, gRF_RFFront);
+                gRF_RFBack = origin_frame * all_frames{1,1}.mat;
+                gRF_RFFront = origin_frame * all_frames{1,2}.mat;
+                obj.plot_limb(origin_frame, origin_frame.inv() * gRF_RFBack);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gRF_RFFront);
                 % right foot to second right link
-                gRF_P2R = all_frames{1,3}.mat;
+                gRF_P2R = origin_frame * all_frames{1,3}.mat;
                 gRF_P2R.plot('RF-P2R')
-                obj.plot_limb(origin_frame, gRF_P2R);
+                obj.plot_limb(origin_frame, origin_frame.inv() * gRF_P2R);
                 % second right link to first right link
-                gRF_P1R = all_frames{1,4}.mat;
+                gRF_P1R = origin_frame * all_frames{1,4}.mat;
                 gRF_P1R.plot('RF-P1R')
                 obj.plot_limb(gRF_P2R, gRF_P2R.inv() * gRF_P1R);
                 % first right link to torso
-                gRF_T = all_frames{1,5}.mat;
+                gRF_T = origin_frame * all_frames{1,5}.mat;
                 gRF_T.plot('RF-T')
                 obj.plot_limb(gRF_P1R, gRF_P1R.inv() * gRF_T);
                 % torso to first left link
-                gRF_P1L = all_frames{1,6}.mat;
+                gRF_P1L = origin_frame * all_frames{1,6}.mat;
                 gRF_P1L.plot('RF-P1L')
                 obj.plot_limb(gRF_T, gRF_T.inv() * gRF_P1L);
                 % first left link to second left link
-                gRF_P2L = all_frames{1,7}.mat;
+                gRF_P2L = origin_frame * all_frames{1,7}.mat;
                 gRF_P2L.plot('RF-P2L')
                 obj.plot_limb(gRF_P1L, gRF_P1L.inv() * gRF_P2L);
                 % second left link to left foot
-                gRF_LF = all_frames{1,8}.mat;
+                gRF_LF = origin_frame * all_frames{1,8}.mat;
                 gRF_LF.plot('RF-LF')
                 obj.plot_limb(gRF_P2L, gRF_P2L.inv() * gRF_LF);
                 % left foot to leg lengths
-                gRF_LFBack = all_frames{1,9}.mat;
-                gRF_LFFront = all_frames{1,10}.mat;
+                gRF_LFBack = origin_frame * all_frames{1,9}.mat;
+                gRF_LFFront = origin_frame * all_frames{1,10}.mat;
                 obj.plot_limb(gRF_LF, gRF_LF.inv() * gRF_LFBack);
                 obj.plot_limb(gRF_LF, gRF_LF.inv() * gRF_LFFront);
                 
@@ -481,8 +491,9 @@ classdef Biped < handle
                 disp('Stance is incorrect');
         end
         hold on
-        plot(obj.COM(1), obj.COM(2), 'g*');
-        viscircles([obj.COM(1) obj.COM(2)],0.2, 'EdgeColor', 'g')
+        transNow = obj.gRO.getTranslation();
+        plot(obj.COM(1) + transNow(1), obj.COM(2) + transNow(2), 'g*');
+        viscircles([obj.COM(1) + transNow(1), obj.COM(2) + transNow(2)], 0.2, 'EdgeColor', 'g');
     end
     
     
